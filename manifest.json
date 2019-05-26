@@ -1,0 +1,42 @@
+{
+    "name": "Chrome Live Storage Sample Extension",
+    "version": "1.0",
+    "description": "A sample extension demonstrating live storage shared between background, popup, options, and content views.",
+    "manifest_version": 2,
+    "permissions": [
+        "storage",
+        "declarativeContent"
+    ],
+    "background": {
+        "scripts": [
+            "live-storage-async.js",
+            "sample/background.js"
+        ],
+        "persistent": false
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://github.com/*/ChromeLiveStorage"],
+            "js": [
+                "live-storage-async.js",
+                "sample/content.js"
+            ]
+        }
+    ],
+    "options_page": "sample/test-page.html",
+    "browser_action": {
+        "default_popup": "sample/test-page.html",
+        "default_icon": {
+            "16": "sample/icons/icon16.png",
+            "32": "sample/icons/icon32.png",
+            "48": "sample/icons/icon48.png",
+            "128": "sample/icons/icon128.png"
+        }
+    },
+    "icons": {
+        "16": "sample/icons/icon16.png",
+        "32": "sample/icons/icon32.png",
+        "48": "sample/icons/icon48.png",
+        "128": "sample/icons/icon128.png"
+    }
+}
