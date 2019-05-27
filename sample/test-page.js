@@ -24,7 +24,7 @@ storage.load().then(() => {
 
 // define handleError to handle errors that occur upon set/delete.
 // an error can occur as a result of exceeding storage data quota limits
-storage.handleError = (message, info) => {
+storage.onError = (message, info) => {
     console.warn('Custom error handler:', message, info);
     alert('Error: ' + message);
 };

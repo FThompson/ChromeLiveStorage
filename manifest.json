@@ -1,5 +1,5 @@
 {
-    "name": "Chrome Live Storage Sample Extension",
+    "name": "Chrome Live Storage Sample",
     "version": "1.0",
     "description": "A sample extension demonstrating live storage shared between background, popup, options, and content views.",
     "manifest_version": 2,

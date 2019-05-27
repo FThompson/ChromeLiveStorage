@@ -159,7 +159,7 @@ const LiveStorage = (() => {
                             let info = {
                                 action: 'set', area: areaName, key, value
                             };
-                            handleError(chrome.runtime.lastError.message, info);
+                            onError(chrome.runtime.lastError.message, info);
                         }
                     });
                 }
@@ -177,7 +177,7 @@ const LiveStorage = (() => {
                             let info = {
                                 action: 'remove', area: areaName, key
                             };
-                            handleError(chrome.runtime.lastError.message, info);
+                            onError(chrome.runtime.lastError.message, info);
                         }
                     });
                 }
@@ -196,7 +196,7 @@ const LiveStorage = (() => {
      *                      the error occurred. Use these values to plan how to
      *                      avoid the error during future invocations.
      */
-    function handleError(message, info) {
+    function onError(message, info) {
         console.warn(message, info);
     }
 
@@ -209,7 +209,7 @@ const LiveStorage = (() => {
         get sync() { return storage.sync; },
         get local() { return storage.local; },
         get managed() { return storage.managed; },
-        get handleError() { return handleError },
-        set handleError(fn) { handleError = fn }
+        get onError() { return onError },
+        set onError(fn) { onError = fn }
     }
 })();
