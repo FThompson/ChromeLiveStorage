@@ -1,3 +1,7 @@
+/**
+ * This module defines a live storage object that maintains an up-to-date
+ * representation of chrome.storage user data. 
+ */
 const LiveStorage = (() => {
     let updating = false;
     const listeners = {};
@@ -7,9 +11,17 @@ const LiveStorage = (() => {
         managed: buildStorageProxy({}, 'managed')
     };
 
-    // options:
-    // * area: the name of the namespace for this key
-    // * onLoad: true to run upon loading storage object
+    /**
+     * Adds a listener that calls a given callback when a given key's value
+     * changes.
+     * 
+     * @param {String} key The key to listen for changes on.
+     * @param {Function} callback The function to call when the key's value
+     *                            changes.
+     * @param {Object} options Optional options:
+     *  * area {String} The name of the storage area to apply this listener to.
+     *  * onLoad {Boolean} true to run upon loading the storage object's data.
+     */
     function addListener(key, callback, options={}) {
         if (!(key in listeners)) {
             listeners[key] = [];
@@ -17,6 +29,14 @@ const LiveStorage = (() => {
         listeners[key].push({ callback, options });
     }
 
+    /**
+     * Removes the given callback bound to a given key.
+     * 
+     * @param {String} key The key to remove the callback from.
+     * @param {Function} callback The callback to remove.
+     * @param {Object} options Optional options:
+     *  * area {String} The storage area that the callback is bound to.
+     */
     function removeListener(key, callback, options) {
         if (key in listeners) {
             listeners[key] = listeners[key].filter(listener => {
@@ -28,7 +48,14 @@ const LiveStorage = (() => {
         }
     }
 
+    /**
+     * Updates the local storage object and calls applicable listeners.
+     * 
+     * @param {Object} changes The changes to apply.
+     * @param {String} areaName The name of the area to apply changes to.
+     */
     function update(changes, areaName) {
+        // identify changes
         let added = {};
         let removedKeys = [];
         for (let key in changes) {
@@ -39,6 +66,7 @@ const LiveStorage = (() => {
                 removedKeys.push(key);
             }
         }
+        // apply changes
         updating = true;
         Object.assign(storage[areaName], added);
         for (let key of removedKeys) {
@@ -65,6 +93,13 @@ const LiveStorage = (() => {
         }
     }
 
+    /**
+     * Async loads data from chrome.storage and calls applicable callbacks.
+     * 
+     * @param {Object} areas The areas to load data into, where the keys are
+     *                       area names and values are booleans.
+     *                       Defaults to load sync/local, not load managed.
+     */
     async function load(areas={}) {
         let defaults = { sync: true, local: true, managed: false };
         let requests = [];
@@ -100,6 +135,14 @@ const LiveStorage = (() => {
         });
     }
 
+    /**
+     * Creates a storage data object proxy that calls chrome.storage functions
+     * when modifying storage data. This proxy also enforces read-only access
+     * for the "managed" chrome.storage area.
+     * 
+     * @param {Object} storage The storage object to wrap.
+     * @param {String} areaName The area name of the wrapped storage object.
+     */
     function buildStorageProxy(storage, areaName) {
         return new Proxy(storage, {
             set: (store, key, value) => {
@@ -127,6 +170,7 @@ const LiveStorage = (() => {
         });
     }
 
+    // the LiveStorage public contract, with unmodifiable storage objects
     return {
         load,
         addListener,
