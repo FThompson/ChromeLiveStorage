@@ -1,94 +1,120 @@
-class LiveStorage {
-    constructor(syncItems, localItems) {
-        if (LiveStorage._instance) {
-            return LiveStorage._instance;
+const LiveStorage = (() => {
+    let updating = false;
+    const listeners = {};
+    const storage = {
+        sync: buildStorageProxy({}, 'sync'),
+        local: buildStorageProxy({}, 'local'),
+        managed: buildStorageProxy({}, 'managed')
+    };
+
+    // options:
+    // * area: the name of the namespace for this key
+    // * onLoad: true to run upon loading storage object
+    function addListener(key, callback, options={}) {
+        if (!(key in listeners)) {
+            listeners[key] = [];
         }
-        this._listeners = {};
-        this._updating = false;
-        this._storage = {
-            sync: this._getStorageProxy('sync', syncItems),
-            local: this._getStorageProxy('local', localItems)
-        }
-        chrome.storage.onChanged.addListener((changes, areaName) => this._update(changes, areaName));
-        LiveStorage._instance = this;
+        listeners[key].push({ callback, options });
     }
 
-    static async load() {
-        return new Promise((resolve, reject) => {
-            chrome.storage.sync.get(null, syncItems => {
-                chrome.storage.local.get(null, localItems => {
-                    resolve(new LiveStorage(syncItems, localItems));
-                });
+    function removeListener(key, callback, options) {
+        if (key in listeners) {
+            listeners[key] = listeners[key].filter(listener => {
+                if (options.area && options.area !== listener.areaName) {
+                    return false;
+                }
+                return listener.callback !== callback;
             });
-        });
-    }
-
-    static get instance() {
-        return LiveStorage._instance;
-    }
-
-    static get sync() {
-        return LiveStorage._instance.sync;
-    }
-
-    static get local() {
-        return LiveStorage._instance.local;
-    }
-
-    get sync() {
-        return this._storage.sync;
-    }
-
-    get local() {
-        return this._storage.local;
-    }
-
-    addListener(key, callback) {
-        if (!(key in this._listeners)) {
-            this._listeners[key] = [];
-        }
-        this._listeners[key].push(callback);
-    }
-
-    removeListener(key, callback) {
-        if (key in this._listeners) {
-            this._listeners[key] = this._listeners[key].filter(lis => lis !== callback);
         }
     }
 
-    _update(changes, areaName) {
+    function update(changes, areaName) {
         let added = {};
-        let removed = [];
-        Object.keys(changes).forEach(key => {
-            if (key in this._listeners) {
-                this._listeners[key].forEach(callback => callback(changes[key]));
-            }
+        let removedKeys = [];
+        for (let key in changes) {
             if ('newValue' in changes[key]) {
                 added[key] = changes[key].newValue;
+                changes[key].value = changes[key].newValue;
             } else {
-                removed.push(key);
+                removedKeys.push(key);
             }
-        });
-        this._updating = true;
-        Object.assign(this._storage[areaName], added);
-        for (let key in removed) {
-            delete this._storage[areaName][key];
         }
-        this._updating = false;
+        updating = true;
+        Object.assign(storage[areaName], added);
+        for (let key of removedKeys) {
+            delete storage[areaName][key];
+        }
+        updating = false;
+        // call listeners after updating storage objects
+        for (let key in changes) {
+            if (key in listeners) {
+                callListeners(key, changes[key], areaName, false);
+            }
+        }
     }
 
-    _getStorageProxy(areaName, storage) {
+    function callListeners(key, change, areaName, isLoad) {
+        for (let listener of listeners[key]) {
+            if (isLoad && !listener.options.onLoad) {
+                continue;
+            }
+            if (listener.options.area && listener.options.area !== areaName) {
+                continue;
+            }
+            listener.callback(change);
+        }
+    }
+
+    async function load(storageAreas={}) {
+        let defaults = { sync: true, local: true, managed: false };
+        let requests = [];
+        for (let area in defaults) {
+            let shouldFetch = area in storageAreas ? storageAreas[area] : defaults[area];
+            requests.push(new Promise((resolve, reject) => {
+                if (shouldFetch) {
+                    chrome.storage[area].get(null, items => {
+                        resolve({ area, items });
+                    });
+                } else {
+                    resolve({ area, items: {} });
+                }
+            }));
+        }
+        return Promise.all(requests).then(results => {
+            for (let result of results) {
+                storage[result.area] = buildStorageProxy(result.items, result.area);
+            }
+            // call listeners after updating storage objects
+            for (let area in storage) {
+                for (let key in storage[area]) {
+                    if (key in listeners) {
+                        let change = { value: storage[area][key] };
+                        callListeners(key, change, area, true);
+                    }
+                }
+            }
+            chrome.storage.onChanged.addListener(update);
+        });
+    }
+
+    function buildStorageProxy(storage, areaName) {
         const handler = {
             set: (store, key, value) => {
-                if (this._updating) {
+                if (areaName === 'managed') {
+                    return false; // chrome.storage.managed is read-only
+                }
+                if (updating) {
                     store[key] = value;
                 } else {
-                    chrome.storage[areaName].set({ [key]: value });
+                    chrome.storage[areaName].set({ [key]: value })
                 }
                 return true;
             },
             deleteProperty: (store, key) => {
-                if (this._updating) {
+                if (areaName === 'managed') {
+                    return false; // chrome.storage.managed is read-only
+                }
+                if (updating) {
                     delete store[key];
                 } else {
                     chrome.storage[areaName].remove(key);
@@ -98,4 +124,13 @@ class LiveStorage {
         };
         return new Proxy(storage, handler);
     }
-}
+
+    return {
+        load,
+        addListener,
+        removeListener,
+        get sync() { return storage.sync; },
+        get local() { return storage.local; },
+        get managed() { return storage.managed; }
+    }
+})();

@@ -3,9 +3,17 @@
     <head>
         <script src='/live-storage.js' defer></script>
         <script src='test-page.js' defer></script>
+        <link href='style.css' type='text/css' rel='stylesheet'>
     </head>
     <body>
-        <input type='checkbox' id='liveStorageTest'>
-        <label for='liveStorageTest'>Test checkbox</label>
+        <div id='controls'>
+            <input type='checkbox' id='showBackgroundColor'>
+            <label for='showBackgroundColor'>Show background color: </label>
+            <select id='backgroundColor'>
+                <option value='green' selected>Green</option>
+                <option value='yellow'>Yellow</option>
+                <option value='cyan'>Cyan</option>
+            </select>
+        </div>
     </body>
 </html>
