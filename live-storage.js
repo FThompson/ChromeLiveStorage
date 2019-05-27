@@ -3,7 +3,7 @@
  * representation of chrome.storage user data. 
  */
 const LiveStorage = (() => {
-    let updating = false;
+    let updating = false; // flag to avoid infinite call stack when saving data
     const listeners = {};
     const storage = {
         sync: buildStorageProxy({}, 'sync'),
