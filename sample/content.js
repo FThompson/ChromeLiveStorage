@@ -1,3 +1,9 @@
+/**
+ * This content script runs on https://github.com/FThompson/ChromeLiveStorage
+ * and forks of that repository. The script changes the page background color
+ * to actively match the setting chosen in either the popup or options page.
+ */
+
 const storage = LiveStorage;
 
 storage.addListener('showBackgroundColor', change => {

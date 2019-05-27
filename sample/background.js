@@ -1,3 +1,8 @@
+/**
+ * This background script logs data changes to demonstrate data synchronization
+ * between popup, options, and content script pages.
+ */
+
 const storage = LiveStorage;
 storage.load();
 

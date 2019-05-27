@@ -6,9 +6,9 @@ const LiveStorage = (() => {
     let updating = false; // flag to avoid infinite call stack when saving data
     const listeners = {};
     const storage = {
-        sync: buildStorageProxy({}, 'sync'),
-        local: buildStorageProxy({}, 'local'),
-        managed: buildStorageProxy({}, 'managed')
+        sync: buildStorageProxy('sync'),
+        local: buildStorageProxy('local'),
+        managed: buildStorageProxy('managed')
     };
 
     /**
@@ -18,9 +18,9 @@ const LiveStorage = (() => {
      * @param {String} key The key to listen for changes on.
      * @param {Function} callback The function to call when the key's value
      *                            changes.
-     * @param {Object} options Optional options:
+     * @param {Object} options The optional options:
      *  * area {String} The name of the storage area to apply this listener to.
-     *  * onLoad {Boolean} true to run upon loading the storage object's data.
+     *  * onLoad {Boolean} true to run when populating data in #load().
      */
     function addListener(key, callback, options={}) {
         if (!(key in listeners)) {
@@ -113,11 +113,12 @@ const LiveStorage = (() => {
                 } else {
                     resolve({ area, items: {} });
                 }
+                // TODO: handle rejection
             }));
         }
         return Promise.all(requests).then(results => {
-            updating = true;
             // add loaded data into storage objects
+            updating = true;
             for (let result of results) {
                 Object.assign(storage[result.area], result.items);
             }
@@ -140,11 +141,10 @@ const LiveStorage = (() => {
      * when modifying storage data. This proxy also enforces read-only access
      * for the "managed" chrome.storage area.
      * 
-     * @param {Object} storage The storage object to wrap.
      * @param {String} areaName The area name of the wrapped storage object.
      */
-    function buildStorageProxy(storage, areaName) {
-        return new Proxy(storage, {
+    function buildStorageProxy(areaName) {
+        return new Proxy({}, {
             set: (store, key, value) => {
                 if (areaName === 'managed') {
                     return false; // chrome.storage.managed is read-only

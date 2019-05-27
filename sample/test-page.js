@@ -1,3 +1,8 @@
+/**
+ * This page, loaded into both the popup and options views, synchronizes the
+ * checkbox and combobox controls with the underlying live storage object.
+ */
+
 const storage = LiveStorage;
 const controls = document.getElementById('controls');
 const colorCheckbox = document.getElementById('showBackgroundColor');
@@ -14,6 +19,7 @@ storage.addListener('showBackgroundColor', change => {
 // load the storage and upon load, update the combobox with storage data
 storage.load().then(() => {
     updateCombobox();
+    // listener for showBackgroundColor will be called if that data is loaded
 });
 
 // update the selected color to match the value in storage
