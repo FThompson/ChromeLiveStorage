@@ -108,12 +108,14 @@ const LiveStorage = (() => {
                 let shouldFetch = area in areas ? areas[area] : defaults[area];
                 if (shouldFetch) {
                     chrome.storage[area].get(null, items => {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError.message);
+                        }
                         resolve({ area, items });
                     });
                 } else {
                     resolve({ area, items: {} });
                 }
-                // TODO: handle rejection
             }));
         }
         return Promise.all(requests).then(results => {
@@ -147,36 +149,67 @@ const LiveStorage = (() => {
         return new Proxy({}, {
             set: (store, key, value) => {
                 if (areaName === 'managed') {
-                    return false; // chrome.storage.managed is read-only
+                    throw new Error('chrome.storage.managed is read-only');
                 }
                 if (updating) {
                     store[key] = value;
                 } else {
-                    chrome.storage[areaName].set({ [key]: value })
+                    chrome.storage[areaName].set({ [key]: value }, () => {
+                        if (chrome.runtime.lastError) {
+                            let info = {
+                                action: 'set', area: areaName, key, value
+                            };
+                            handleError(chrome.runtime.lastError.message, info);
+                        }
+                    });
                 }
                 return true;
             },
             deleteProperty: (store, key) => {
                 if (areaName === 'managed') {
-                    return false; // chrome.storage.managed is read-only
+                    throw new Error('chrome.storage.managed is read-only');
                 }
                 if (updating) {
                     delete store[key];
                 } else {
-                    chrome.storage[areaName].remove(key);
+                    chrome.storage[areaName].remove(key, () => {
+                        if (chrome.runtime.lastError) {
+                            let info = {
+                                action: 'remove', area: areaName, key
+                            };
+                            handleError(chrome.runtime.lastError.message, info);
+                        }
+                    });
                 }
                 return true;
             }
         });
     }
 
+    /**
+     * Handles errors that occur in chrome.storage set/remove function calls.
+     * This function should be defined to supply users with meaningful error
+     * messages.
+     * 
+     * @param {String} message The message from `chrome.runtime.lastError`.
+     * @param {Object} info Info containing the area, key, and value for which
+     *                      the error occurred. Use these values to plan how to
+     *                      avoid the error during future invocations.
+     */
+    function handleError(message, info) {
+        console.warn(message, info);
+    }
+
     // the LiveStorage public contract, with unmodifiable storage objects
+    // the explicit handleError getter/setter are required due to module scope
     return {
         load,
         addListener,
         removeListener,
         get sync() { return storage.sync; },
         get local() { return storage.local; },
-        get managed() { return storage.managed; }
+        get managed() { return storage.managed; },
+        get handleError() { return handleError },
+        set handleError(fn) { handleError = fn }
     }
 })();

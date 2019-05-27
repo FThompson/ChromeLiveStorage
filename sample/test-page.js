@@ -18,9 +18,16 @@ storage.addListener('showBackgroundColor', change => {
 
 // load the storage and upon load, update the combobox with storage data
 storage.load().then(() => {
-    updateCombobox();
     // listener for showBackgroundColor will be called if that data is loaded
-});
+    updateCombobox(); // the backgroundColor listener is not run onLoad
+}).catch(err => alert(err)); // use catch to handle storage loading errors
+
+// define handleError to handle errors that occur upon set/delete.
+// an error can occur as a result of exceeding storage data quota limits
+storage.handleError = (message, info) => {
+    console.warn('Custom error handler:', message, info);
+    alert('Error: ' + message);
+};
 
 // update the selected color to match the value in storage
 function updateCombobox() {
@@ -37,3 +44,15 @@ colorCheckbox.addEventListener('change', function() {
 colorCombobox.addEventListener('change', function() {
     storage.local.backgroundColor = this.value;
 });
+
+document.getElementById('causeRuntimeError').addEventListener('click', () => {
+    causeRuntimeError();
+});
+
+function causeRuntimeError() {
+    let payload = '';
+    for (let i = 0; i < chrome.storage.sync.QUOTA_BYTES_PER_ITEM; i++) {
+        payload += ' ';
+    }
+    storage.sync.payload = payload;
+}

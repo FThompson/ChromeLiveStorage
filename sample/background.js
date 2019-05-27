@@ -4,7 +4,8 @@
  */
 
 const storage = LiveStorage;
-storage.load();
+
+storage.load().catch(err => console.warn(err));
 
 storage.addListener('backgroundColor', change => {
     console.log('backgroundColor: ' + change.value);
