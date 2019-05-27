@@ -65,12 +65,12 @@ const LiveStorage = (() => {
         }
     }
 
-    async function load(storageAreas={}) {
+    async function load(areas={}) {
         let defaults = { sync: true, local: true, managed: false };
         let requests = [];
         for (let area in defaults) {
-            let shouldFetch = area in storageAreas ? storageAreas[area] : defaults[area];
             requests.push(new Promise((resolve, reject) => {
+                let shouldFetch = area in areas ? areas[area] : defaults[area];
                 if (shouldFetch) {
                     chrome.storage[area].get(null, items => {
                         resolve({ area, items });
@@ -81,9 +81,12 @@ const LiveStorage = (() => {
             }));
         }
         return Promise.all(requests).then(results => {
+            updating = true;
+            // add loaded data into storage objects
             for (let result of results) {
-                storage[result.area] = buildStorageProxy(result.items, result.area);
+                Object.assign(storage[result.area], result.items);
             }
+            updating = false;
             // call listeners after updating storage objects
             for (let area in storage) {
                 for (let key in storage[area]) {
@@ -98,7 +101,7 @@ const LiveStorage = (() => {
     }
 
     function buildStorageProxy(storage, areaName) {
-        const handler = {
+        return new Proxy(storage, {
             set: (store, key, value) => {
                 if (areaName === 'managed') {
                     return false; // chrome.storage.managed is read-only
@@ -121,8 +124,7 @@ const LiveStorage = (() => {
                 }
                 return true;
             }
-        };
-        return new Proxy(storage, handler);
+        });
     }
 
     return {
