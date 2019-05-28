@@ -2,6 +2,8 @@
 
 Chrome Live Storage is a module that provides [`chrome.storage`](https://developer.chrome.com/apps/storage) data as native JavaScript objects that automatically synchronize between all extension views (background, content scripts, popups, options, etc.).
 
+### Example Usage
+
 The following example demonstrates synchronizing a checkbox input with user data.
 
 ```javascript
@@ -26,6 +28,10 @@ function updateCheckbox() {
 }
 ```
 
+### Sample Extension
+
+This repository contains a sample Chrome extension that demonstrate synchronizing user data between the popup, the options page, the background script, and a content script which runs on this repository's GitHub page. You can choose to enable the repository page's background color from the popup/options pages and observe the change happen immediately.
+
 ## Installation
 
 Download [live-storage.js](live-storage.js) to a location within your extension directory.
@@ -44,7 +50,7 @@ If you haven't already done so, declare the "storage" permission in your extensi
 
 ### Background Script
 
-Declare live-storage.js in your manifest, before the background script.
+Declare live-storage.js in your manifest before the background script.
 
 ```
 {
@@ -61,7 +67,7 @@ Declare live-storage.js in your manifest, before the background script.
 
 ### Content Scripts
 
-Declare live-storage.js in your manifest, before the content script.
+Declare live-storage.js in your manifest before the content script.
 
 ```
 {
@@ -80,7 +86,7 @@ Declare live-storage.js in your manifest, before the content script.
 
 ### Popup and Options Pages
 
-Link live-storage.js through a `script` tag, before the page script.
+Link live-storage.js through a `script` tag before the page script.
 
 ```html
 <head>
@@ -91,7 +97,7 @@ Link live-storage.js through a `script` tag, before the page script.
 
 ## Usage
 
-You can use the storage object as `LiveStorage`, or declare it as any name you like.
+You can use the storage object as `LiveStorage`, or declare it as any name you like, such as `storage`.
 
 ```javascript
 const storage = LiveStorage;
