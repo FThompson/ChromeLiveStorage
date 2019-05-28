@@ -98,10 +98,10 @@ const LiveStorage = (() => {
      * 
      * @param {Object} areas The areas to load data into, where the keys are
      *                       area names and values are booleans.
-     *                       Defaults to load sync/local, not load managed.
+     *                       Defaults to load all three: sync, local, managed.
      */
     async function load(areas={}) {
-        let defaults = { sync: true, local: true, managed: false };
+        let defaults = { sync: true, local: true, managed: true };
         let requests = [];
         for (let area in defaults) {
             requests.push(new Promise((resolve, reject) => {
