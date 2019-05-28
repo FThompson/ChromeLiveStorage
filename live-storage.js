@@ -119,6 +119,7 @@ const LiveStorage = (() => {
             }));
         }
         return Promise.all(requests).then(results => {
+            chrome.storage.onChanged.addListener(update);
             // add loaded data into storage objects
             updating = true;
             for (let result of results) {
@@ -134,7 +135,6 @@ const LiveStorage = (() => {
                     }
                 }
             }
-            chrome.storage.onChanged.addListener(update);
         });
     }
 
