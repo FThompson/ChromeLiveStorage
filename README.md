@@ -32,7 +32,7 @@ Download [live-storage.js](live-storage.js) to a location within your extension 
 
 If you haven't already done so, declare the "storage" permission in your extension's manifest.
 
-```json
+```
 {
     ...
     "permissions": [
@@ -46,7 +46,7 @@ If you haven't already done so, declare the "storage" permission in your extensi
 
 Declare live-storage.js in your manifest, before the background script.
 
-```json
+```
 {
     ...
     "background": {
@@ -63,7 +63,7 @@ Declare live-storage.js in your manifest, before the background script.
 
 Declare live-storage.js in your manifest, before the content script.
 
-```json
+```
 {
     ...
     "content_scripts": [
@@ -101,7 +101,7 @@ This object contains storage objects that reflect each of the three `chrome.stor
 
 ### Load the storage object
 
-The storage object starts out empty. Load existing `chrome.storage` data into the object with the async `load` function. The resulting promise resolves with no value, but this function guarantees that the storage objects are populated before any `.then` callbacks are called.
+The storage object starts out empty. Load existing `chrome.storage` data into the object with the async `load` function. The resulting promise resolves with no value but guarantees that the storage objects are populated.
 
 ```javascript
 storage.load().then(() => {
@@ -120,9 +120,9 @@ storage.addListener('myBooleanValue', change => {
 });
 ```
 
-The `change` object passed to the callback can contain any of `oldValue`, `newValue`, and `value`. The `value` property will always contain the current value in storage. You can also access the storage object directly, `storage.sync.myBooleanValue`.
+The `change` object passed to the callback can contain any of `oldValue`, `newValue`, and `value`. The `value` property will always contain the data's current value in storage. You can also access the storage directly, `storage.sync.myBooleanValue`.
 
-By default, listeners added in this way will not be run upon the `load` function populating the storage object. To enable that functionality, pass `onLoad: true` in the options object.
+By default, listeners added in this way will not be run during the `load` function when populating the storage object. To enable that functionality, pass `onLoad: true` in the options object.
 
 ```javascript
 storage.addListener('myBooleanValue', change => {
