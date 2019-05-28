@@ -148,37 +148,23 @@ const LiveStorage = (() => {
     function buildStorageProxy(areaName) {
         return new Proxy({}, {
             set: (store, key, value) => {
-                if (areaName === 'managed') {
-                    throw new Error('chrome.storage.managed is read-only');
-                }
-                if (updating) {
-                    store[key] = value;
-                } else {
+                checkManaged(areaName);
+                let prev = store[key];
+                store[key] = value;
+                if (!updating) {
                     chrome.storage[areaName].set({ [key]: value }, () => {
-                        if (chrome.runtime.lastError) {
-                            let info = {
-                                action: 'set', area: areaName, key, value
-                            };
-                            onError(chrome.runtime.lastError.message, info);
-                        }
+                        checkError('set', areaName, key, value, prev);
                     });
                 }
                 return true;
             },
             deleteProperty: (store, key) => {
-                if (areaName === 'managed') {
-                    throw new Error('chrome.storage.managed is read-only');
-                }
-                if (updating) {
-                    delete store[key];
-                } else {
+                checkManaged(areaName);
+                let prev = store[key];
+                delete store[key];
+                if (!updating) {
                     chrome.storage[areaName].remove(key, () => {
-                        if (chrome.runtime.lastError) {
-                            let info = {
-                                action: 'remove', area: areaName, key
-                            };
-                            onError(chrome.runtime.lastError.message, info);
-                        }
+                        checkError('remove', areaName, key, undefined, prev);
                     });
                 }
                 return true;
@@ -187,9 +173,39 @@ const LiveStorage = (() => {
     }
 
     /**
+     * Checks if a chrome.runtime error occurred and if so, reverts the live
+     * storage to undo the change on which the error occurred. This function
+     * also calls onError, passing the error message and error content info.
+     * 
+     * @param {String} action The action during which the error occurred.
+     * @param {String} area The name of the storage area used in the action.
+     * @param {String} key The key used in the action.
+     * @param {Any} value The value used in the action.
+     * @param {Any} previousValue The previous value, to revert the value to.
+     */
+    function checkError(action, area, key, value, previousValue) {
+        if (chrome.runtime.lastError) {
+            updating = true;
+            storage[area][key] = previousValue;
+            updating = false;
+            let info = { action, area, key, value, previousValue };
+            onError(chrome.runtime.lastError.message, info);
+        }
+    }
+
+    /**
+     * Checks if the given area is the read-only chrome.storage.managed area.
+     */
+    function checkManaged(areaName) {
+        if (areaName === 'managed') {
+            throw new Error('chrome.storage.managed is read-only');
+        }
+    }
+
+    /**
      * Handles errors that occur in chrome.storage set/remove function calls.
      * This function should be defined to supply users with meaningful error
-     * messages.
+     * messages. The default implementation shows a console warning.
      * 
      * @param {String} message The message from `chrome.runtime.lastError`.
      * @param {Object} info Info containing the area, key, and value for which
@@ -200,8 +216,10 @@ const LiveStorage = (() => {
         console.warn(message, info);
     }
 
-    // the LiveStorage public contract, with unmodifiable storage objects
-    // the explicit handleError getter/setter are required due to module scope
+    /**
+     * The LiveStorage public contract, with unmodifiable storage objects.
+     * The explicit onError get/set functions are required due to module scope.
+     */
     return {
         load,
         addListener,

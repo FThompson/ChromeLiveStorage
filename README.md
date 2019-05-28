@@ -2,7 +2,7 @@
 
 Chrome Live Storage is a module that provides [`chrome.storage`](https://developer.chrome.com/apps/storage) data as native JavaScript objects that automatically synchronize between all extension views (background, content scripts, popups, options, etc.).
 
-The following example demonstrates synchronizes a checkbox input with user data.
+The following example demonstrates synchronizing a checkbox input with user data.
 
 ```javascript
 const storage = LiveStorage;
