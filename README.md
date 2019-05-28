@@ -144,3 +144,55 @@ storage.onError = (message, info) => {
     alert('Storage error: ' + message);
 };
 ```
+
+## API Reference
+
+```javascript
+LiveStorage
+```
+
+This module is exposed as a set of static properties and functions named `LiveStorage`.
+
+```javascript
+async LiveStorage.load([areas])
+```
+
+Asynchronously loads user data from the `chrome.storage` areas, returning a promise that will either resolve without a value but with the storage values loaded, or reject with an error message. You can optionally pass an object indicating which areas to load, such as `{ sync: false, local: true, managed: false }` to only load data from `chrome.storage.local`.
+
+```javascript
+LiveStorage.sync
+```
+
+A live storage object reflecting user data stored in `chrome.storage.sync`.
+
+```javascript
+LiveStorage.local
+```
+
+A live storage object reflecting user data stored in `chrome.storage.local`.
+
+```javascript
+LiveStorage.managed
+```
+
+A live storage object reflecting enterprise data stored in `chrome.storage.managed`. Read-only.
+
+```javascript
+LiveStorage.addListener(key, callback[, options])
+```
+
+Adds a listener that calls the given callback when the given key's value changes. You can optionally pass an options object containing any of the following:
+ * `area` The name of the storage area to restrict this listener to, such as `"sync"`.
+ * `onLoad` Whether or not to run this listener during `LiveStorage.load()`. Pass `true` to run on load. Default `false`.
+
+```javascript
+LiveStorage.removeListener(key, callback[, options])
+```
+
+Removes the given callback from the given key. If the listener was defined with the `area` option, you must pass the same `area` value in the optional options object.
+
+```javascript
+LiveStorage.onError
+```
+
+The error handler that will be called if any internal `chrome.storage` API errors occur while setting or removing storage data, such as due to exceeding storage size quotas or rate limits. You can define this function to override the default `console.warn` behavior. This callback is passed the error message as `message` and the context information in the `info` object, containing information such as action, storage area name, data key, and data value.
