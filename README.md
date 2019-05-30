@@ -10,9 +10,7 @@ The following example demonstrates synchronizing a checkbox input with user data
 const storage = LiveStorage;
 
 // Load storage and update checkbox with loaded value from storage
-storage.load().then(() => {
-    updateCheckbox();
-});
+storage.load().then(updateCheckbox);
 
 // Update checkbox when data changes in storage
 storage.addListener('myBooleanValue', updateCheckbox);
