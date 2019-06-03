@@ -18,6 +18,7 @@ storage.addListener('showBackgroundColor', change => {
 
 // load the storage and upon load, update the combobox with storage data
 storage.load().then(() => {
+    console.log(storage);
     // listener for showBackgroundColor will be called if that data is loaded
     updateCombobox(); // the backgroundColor listener is not run onLoad
 }).catch(err => alert(err)); // use catch to handle storage loading errors

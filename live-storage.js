@@ -3,6 +3,7 @@
  * representation of chrome.storage user data. 
  */
 const LiveStorage = (() => {
+    let loaded = false;
     let updating = false; // flag to avoid infinite call stack when saving data
     const listeners = {};
     const storage = {
@@ -19,8 +20,8 @@ const LiveStorage = (() => {
      * @param {Function} callback The function to call when the key's value
      *                            changes.
      * @param {Object} options The optional options:
-     *  * area {String} The name of the storage area to apply this listener to.
-     *  * onLoad {Boolean} true to run when populating data in #load().
+     *  - area {String} The name of the storage area to apply this listener to.
+     *  - onLoad {Boolean} true to run when populating data in #load().
      */
     function addListener(key, callback, options={}) {
         if (!(key in listeners)) {
@@ -35,7 +36,7 @@ const LiveStorage = (() => {
      * @param {String} key The key to remove the callback from.
      * @param {Function} callback The callback to remove.
      * @param {Object} options Optional options:
-     *  * area {String} The storage area that the callback is bound to.
+     *  - area {String} The storage area that the callback is bound to.
      */
     function removeListener(key, callback, options) {
         if (key in listeners) {
@@ -104,20 +105,29 @@ const LiveStorage = (() => {
     /**
      * Async loads data from chrome.storage and calls applicable callbacks.
      * 
-     * @param {Object} areas The areas to load data into, where the keys are
-     *                       area names and values are booleans.
-     *                       Defaults to load all three: sync, local, managed.
+     * @param {Object} options Optional options:
+     *  - {Object} areas The areas to load data into, where the keys are
+     *             area names and values are booleans.
+     *             Defaults to load all three: sync, local, managed.
      */
-    async function load(areas={}) {
-        let defaults = { sync: true, local: true, managed: true };
+    async function load(options={}) {
+        if (loaded) {
+            // return instantly instead of loading again
+            return Promise.resolve();
+        }
+        let defaultAreas = { sync: true, local: true, managed: true };
         let requests = [];
-        for (let area in defaults) {
+        for (let area in defaultAreas) {
             requests.push(new Promise((resolve, reject) => {
-                let shouldFetch = area in areas ? areas[area] : defaults[area];
+                // TODO test this, add options[hard load]
+                let shouldFetch = defaultAreas[area];
+                if ('areas' in options && area in options.areas) {
+                    shouldFetch = options.areas[area];
+                }
                 if (shouldFetch) {
                     chrome.storage[area].get(null, items => {
                         if (chrome.runtime.lastError) {
-                            reject(chrome.runtime.lastError.message);
+                            reject({ error: chrome.runtime.lastError.message });
                         }
                         resolve({ area, items });
                     });
@@ -143,6 +153,7 @@ const LiveStorage = (() => {
                     }
                 }
             }
+            loaded = true;
         });
     }
 
@@ -235,7 +246,8 @@ const LiveStorage = (() => {
         get sync() { return storage.sync; },
         get local() { return storage.local; },
         get managed() { return storage.managed; },
-        get onError() { return onError },
-        set onError(fn) { onError = fn }
+        get onError() { return onError; },
+        set onError(fn) { onError = fn; },
+        get loaded() { return loaded; }
     }
 })();

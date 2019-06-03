@@ -158,10 +158,12 @@ LiveStorage
 This module is exposed as a set of static properties and functions named `LiveStorage`.
 
 ```javascript
-async LiveStorage.load([areas])
+async LiveStorage.load([options])
 ```
 
-Asynchronously loads user data from the `chrome.storage` areas, returning a promise that will either resolve without a value but with the storage values loaded, or reject with an error message. You can optionally pass an object indicating which areas to load, such as `{ sync: false, local: true, managed: false }` to only load data from `chrome.storage.local`.
+Asynchronously loads user data from the `chrome.storage` areas, returning a promise that will either resolve without a value but with the storage values loaded, or reject with an error message. You can optionally pass an object indicating which areas to load, such as `{ areas: { sync: false, local: true, managed: false } }` to only load data from `chrome.storage.local`.
+
+If live storage has already been loaded, `load()` returns immediately instead of reloading the storage objects.
 
 ```javascript
 LiveStorage.sync
@@ -200,3 +202,9 @@ LiveStorage.onError
 ```
 
 The error handler that will be called if any internal `chrome.storage` API errors occur while setting or removing storage data, such as due to exceeding storage size quotas or rate limits. You can define this function to override the default `console.warn` behavior. This callback is passed the error message as `message` and the context information in the `info` object, containing information such as action, storage area name, data key, and data value.
+
+```javascript
+LiveStorage.loaded
+```
+
+A boolean value indicating whether or not live storage has been loaded.
