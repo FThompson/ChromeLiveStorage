@@ -81,6 +81,14 @@ const LiveStorage = (() => {
         }
     }
 
+    /**
+     * Calls listeners registered with live storage.
+     * 
+     * @param {String} key The key to call listeners for.
+     * @param {Object} change The change object containing new/old values.
+     * @param {String} areaName The name of the storage area that changed.
+     * @param {Boolean} isLoad true if onLoad listeners should be called.
+     */
     function callListeners(key, change, areaName, isLoad) {
         for (let listener of listeners[key]) {
             if (isLoad && !listener.options.onLoad) {
