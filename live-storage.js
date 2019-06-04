@@ -22,8 +22,11 @@ const LiveStorage = (() => {
      * @param {Object} options The optional options:
      *  - area {String} The name of the storage area to apply this listener to.
      *  - onLoad {Boolean} true to run when populating data in #load().
+     *    Defaults to true.
      */
     function addListener(key, callback, options={}) {
+        let defaults = { onLoad: true };
+        options = Object.assign(defaults, options);
         if (!(key in listeners)) {
             listeners[key] = [];
         }

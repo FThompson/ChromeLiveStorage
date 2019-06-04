@@ -11,10 +11,10 @@ const colorCombobox = document.getElementById('backgroundColor');
 // add a normal data listener
 storage.addListener('backgroundColor', updateCombobox);
 
-// add a data listener specific to storage.sync that runs on storage load
+// add a data listener specific to storage.sync that won't run on storage load
 storage.addListener('showBackgroundColor', change => {
     colorCheckbox.checked = change.value;
-}, { area: 'sync', onLoad: true });
+}, { area: 'sync', onLoad: false });
 
 // load the storage and upon load, update the combobox with storage data
 storage.load().then(() => {

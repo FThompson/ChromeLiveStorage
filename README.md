@@ -126,15 +126,15 @@ storage.addListener('myBooleanValue', change => {
 
 The `change` object passed to the callback can contain any of `oldValue`, `newValue`, and `value`. The `value` property will always contain the data's current value in storage. You can also access the storage directly, `storage.sync.myBooleanValue`.
 
-By default, listeners added in this way will not be run during the `load` function when populating the storage object. To enable that functionality, pass `onLoad: true` in the options object.
+By default, listeners added with this function will be run during the `load` function when populating the storage object. To disable that functionality, pass `onLoad: false` in the options object.
 
 ```javascript
 storage.addListener('myBooleanValue', change => {
     myCheckbox.checked = change.value;
-}, { onLoad: true });
+}, { onLoad: false });
 ```
 
-You can restrict the listener to a specific storage area with the `area: 'sync'` option.
+You can restrict the listener to a specific storage area with the `area` option, for example `area: 'sync'`.
 
 ### Handle errors
 
@@ -189,7 +189,7 @@ LiveStorage.addListener(key, callback[, options])
 
 Adds a listener that calls the given callback when the given key's value changes. You can optionally pass an options object containing any of the following:
  * `area` The name of the storage area to restrict this listener to, such as `"sync"`.
- * `onLoad` Whether or not to run this listener during `LiveStorage.load()`. Pass `true` to run on load. Default `false`.
+ * `onLoad` Whether or not to run this listener during `LiveStorage.load()`. Pass `true` to run on load. Default `true`.
 
 ```javascript
 LiveStorage.removeListener(key, callback[, options])
