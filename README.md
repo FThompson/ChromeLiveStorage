@@ -114,6 +114,8 @@ storage.load().then(() => {
 });
 ```
 
+If you try to access live storage before it has loaded, an error will be thrown.
+
 ### Make your app responsive to user data
 
 Use `addListener` to define functions that are called when storage data changes. These listeners can make your extension responsive to storage changes made in other views (background, content, popup, options, etc.) and on other systems if you are using `sync` storage.

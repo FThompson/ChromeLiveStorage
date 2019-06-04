@@ -147,6 +147,7 @@ const LiveStorage = (() => {
                 Object.assign(storage[result.area], result.items);
             }
             updating = false;
+            loaded = true;
             // call listeners after updating storage objects
             for (let area in storage) {
                 for (let key in storage[area]) {
@@ -156,7 +157,6 @@ const LiveStorage = (() => {
                     }
                 }
             }
-            loaded = true;
         });
     }
 
@@ -169,6 +169,12 @@ const LiveStorage = (() => {
      */
     function buildStorageProxy(areaName) {
         return new Proxy({}, {
+            get: (store, key) => {
+                if (!loaded) {
+                    throw new Error('LiveStorage not yet loaded');
+                }
+                return store[key];
+            },
             set: (store, key, value) => {
                 checkManaged(areaName);
                 let prev = store[key];
